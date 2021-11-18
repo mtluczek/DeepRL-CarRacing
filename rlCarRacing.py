@@ -10,7 +10,7 @@ WIDTH = 84
 HEIGHT = 84
 STACKED_FRAMES = 8
 REPLAY_BUFFER_SIZE = 10000
-BATCH_SIZE = 32
+BATCH_SIZE = 64
 TIME_STEPS = 5000000
 NUM_EPISODES = 10
 
@@ -25,8 +25,8 @@ def train_model(model_name, buf_size, batch_size, log_path, model_path, num_step
         else:
             return -1
 
-    save_best_path = os.path.join(model_path, '/best_model')
-    save_final_path = os.path.join(model_path, '/final_model')
+    save_best_path = os.path.join(model_path, model_name, 'best_model')
+    save_final_path = os.path.join(model_path, model_name, 'final_model')
 
     print(save_final_path)
     print(save_best_path)
@@ -42,24 +42,23 @@ def train_model(model_name, buf_size, batch_size, log_path, model_path, num_step
 
 
 def resume_train_model(model_name, log_path, model_path, environment, num_steps):
-    load_path = os.path.join(model_path, model_name, "best_model")
-    best_path = os.path.join(model_path, model_name, "best_model")
+    path = os.path.join(model_path, model_name, "best_model")
     save_final_path = os.path.join(model_path, model_name, "final_model")
     print(f"Logging to Tensorboard: {log_path}")
     print(f"Saving models to: {model_path}")
 
     if model_name == "DQN":
-        model = DQN.load(best_path, tensorboard_log=log_path)
+        model = DQN.load(path, tensorboard_log=log_path)
         print(f"Resuming DQN training")
     else:
         if model_name == "PPO":
-            model = PPO.load(best_path, tensorboard_log=log_path)
+            model = PPO.load(path, tensorboard_log=log_path)
             print(f"Resuming PPO training")
         else:
             return -1
 
     model.set_env(environment)
-    eval_callback = EvalCallback(eval_env=model.get_env(), best_model_save_path=best_path,
+    eval_callback = EvalCallback(eval_env=model.get_env(), best_model_save_path=path,
                                  n_eval_episodes=5,
                                  eval_freq=50000, verbose=1,
                                  deterministic=True, render=False)
@@ -70,6 +69,8 @@ def resume_train_model(model_name, log_path, model_path, environment, num_steps)
 
 def test_model(environment, model_name, model_path, episodes):
     # mean_reward, std_reward = evaluate_policy(model, model.get_env(), n_eval_episodes=episodes, render=True)
+    model_path = os.path.join(model_path, model_name, "best_model.zip")
+    print(model_path)
     if model_name == "DQN":
         model = DQN.load(model_path, environment)
     else:
@@ -77,7 +78,10 @@ def test_model(environment, model_name, model_path, episodes):
             model = PPO.load(model_path, environment)
         else:
             return -1
-    environment = gym.wrappers.Monitor(environment, directory="monitor", force=True)
+    # monitor each episode - without video_callable records only 0, 1, 8, ...
+    environment = gym.wrappers.Monitor(environment, directory="monitor",
+                                       video_callable=lambda episode_id: True, force=True)
+
     model.set_env(environment)
     environment = model.get_env()
 
@@ -99,34 +103,36 @@ if __name__ == '__main__':
     parser.add_argument("-a", "--agent", default="DQN", help="Reinforcement learning model/agent to use")
     parser.add_argument("-l", "--log_path", default=os.path.join(".", "Training", "Logs"),
                         help="Directory to store logs")
-    parser.add_argument("-s", "--save_model_path", default=os.path.join(".", "Training", "Saved_Models"),
-                        help="Directory to store models")
     parser.add_argument("-b", "--buffer_size", default=REPLAY_BUFFER_SIZE, help="Replay buffer size for DQN")
     parser.add_argument("-t", "--time_steps", default=TIME_STEPS, help="Number of training time steps")
-    parser.add_argument("-m", "--model_path", help="Provide path to model file")
+    parser.add_argument("-m", "--model_path", default=os.path.join(".", "Training", "Saved_Models"),
+                        help="Directory where the models are stored")
     args = parser.parse_args()
 
     if args.mode == "test" and (args.model_path is None):
         parser.error("--mode=test requires providing valid --model_path")
 
+    env_wrappers = EnvironmentWrappers(WIDTH, HEIGHT, STACKED_FRAMES)
+
     if args.agent == "PPO":
         env = gym.make("CarRacing-v0")
-    else:
+    else:  # else -> DQN model
         env = DiscreteCarEnvironment(gym.make("CarRacing-v0"))
+        funcs = [env_wrappers.resize, env_wrappers.grayscale, env_wrappers.frame_stack]
+        env = env_wrappers.observation_wrapper(env, funcs)
+        # apply 3 transformation wrappers to DQN model (resize, grayscale, stacking frames)
 
-    env_wrappers = EnvironmentWrappers(WIDTH, HEIGHT, STACKED_FRAMES)
-    funcs = [env_wrappers.resize, env_wrappers.grayscale, env_wrappers.frame_stack]
-    env = env_wrappers.observation_wrapper(env, funcs)
-    print(env.observation_space.shape)
+
+    print(f"Observation space shape: {env.observation_space.shape}")
 
     if args.mode == "train":
         saved_path = train_model(args.agent, args.buffer_size, BATCH_SIZE,
-                                 args.log_path, args.save_model_path, args.time_steps)
+                                 args.log_path, args.model_path, args.time_steps)
         print(f'Model successfully trained after {args.time_steps} time steps. Results saved in model '
               f'file {saved_path}')
     else:
         if args.mode == "resume":
-            saved_path = resume_train_model(args.agent, args.log_path, args.save_model_path, env, args.time_steps)
+            saved_path = resume_train_model(args.agent, args.log_path, args.model_path, env, args.time_steps)
             print(f'Model successfully trained after {args.time_steps} time steps. Results saved in model '
                   f'file {saved_path}')
         if args.mode == "test":
