@@ -46,6 +46,10 @@ The running procedure can be further parametrized with various command line argu
 OpenAI Gym Car racing environment features both continous observation world formed of color pixels and continuous action space. PPO policy based method allows to perform continuous action, but DQN (which fits better image observation spaces) only allows discrete actions. This requires discretization of continuous action space into separate 4-11 discrete action options. The performed experiments included combination of different number of these. Moreover, higher resolution color action space requires bigger convolutional neural networks for policy/action values modelling which also determined decision to apply **environment wrappers** provided by OpenAI Gym library. The resolution has been lowered to either **84x84** or **42x42 grayscale pixels**. This allows for the use of a **stack of 4-8 consecutive frames** depending on selected experiment setup.
 
 ## Results
+
+**All the tensorboard logs** are saved in [Log folder link](Training/Logs) folder. 
+**The saved models** are stored in [Models folder link](Training/Saved_Models) folder. 
+
 The experiments including various types of observation and action spaces were performed on RTX 3070 graphics card (CUDA) using conda environment. They were both high memory and GPU processing time demanding. The test have been performed on both PPO and DQN. PPO used mostly standard continuous observation spaces with environment wrappers while experiments performed with DQN algorithms used various modifications: 
 * slight changes of CNN architecture, 
 * various replay buffer sizes, 
