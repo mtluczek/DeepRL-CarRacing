@@ -16,6 +16,9 @@ docker build -t rl .
 docker run -it rl
 ```
 
+WARNING: the [script link](scripts/startup_script.sh) could have been converted from Unix(LF) to Windows format during git commit
+If it doesn't work, the endlines should be changed (on Windows in notepad++ ```Edit->EOL Conversion->Unix(LF)```
+ 
 ## Running the experiments
 The provided code includes parametrized option to either train the model, resume/continue training previous best one or test the best saved DQN/PPO model.
 
