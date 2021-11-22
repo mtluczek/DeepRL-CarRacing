@@ -61,7 +61,7 @@ The experiments including various types of observation and action spaces were pe
 * different discrete action spaces, etc. 
 **The best results** have been achieved by using **DQN network** with **4 stacked consecutive 84x84 grayscale pixels frames** with **discrete action space of 5 actions**. The following tensorboard snapshot captured the training process:
 
-![Tensorboard Snapshot 1](tb_dqn_ppo.jpg)
+![Tensorboard Snapshot 1](tb_best_dqn_ppo.jpg)
 
 The process shows that it took over **11 hours** to generate **mean evaluation reward of 921 points** - the game winning model. Previous experiments with DQN showed that the problem was probably overtraining of the model to apply too much breaking in some situations. Nevertheless, the car could take every type of curves (even U-turns) almost perfectly with high speeds. It seems that the model had a problem to revert to old states and correct this behaviour. In consecutive experiments I tried reducing the discrete action space, which helped and solved the game in 3 hours less than achieving score of 896 in previous best model.
 The training process of DQN networks takes a long time - multiple hours - and usually it's only visible at later stages what's going wrong, which is very time consuming. 
