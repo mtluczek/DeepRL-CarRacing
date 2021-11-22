@@ -43,7 +43,7 @@ where ```agent``` is either ```DQN``` or ```PPO```. By default the program loads
 The running procedure can be further parametrized with various command line arguments available after displaying standard help. For simplicity it's omitted from the description and was mostly used for my experiments. 
 
 ## Environment
-OpenAI Gym Car racing environment features both continous observation world formed of color pixels and continuous action space. PPO policy based method allows to perform continuous action, but DQN (which fits better image observation spaces) only allows discrete actions. This requires discretization of continuous action space into separate 4-11 discrete action options. The performed experiments included combination of different number of these. Moreover, higher resolution color action space requires bigger convolutional neural networks for policy/action values modelling which also determined decision to apply **environment wrappers** provided by OpenAI Gym library. The resolution has been lowered to either **84x84** or **42x42 grayscale pixels**. This allows for the use of a **stack of 4-8 consecutive frames** depending on selected experiment setup.
+OpenAI Gym Car racing environment features both continous observation world formed of color pixels and continuous action space. PPO policy based method allows to perform continuous action, but DQN (which can fit image observation spaces better) only allows discrete actions. This requires discretization of continuous action space into separate 4-11 discrete action options. The performed experiments included combination of different number of these. Moreover, higher resolution color action space requires bigger convolutional neural networks for policy/action values modelling which also determined decision to apply **environment wrappers** provided by OpenAI Gym library. The resolution has been lowered to either **84x84** or **42x42 grayscale pixels**. This allows for the use of a **stack of 4-8 consecutive frames** depending on selected experiment setup.
 
 ## Results
 
@@ -63,17 +63,17 @@ The experiments including various types of observation and action spaces were pe
 
 ![Tensorboard Snapshot 1](tb_best_dqn_ppo.jpg)
 
-The process shows that it took over **11 hours** to generate **mean evaluation reward of 921 points** - the game winning model. Previous experiments with DQN showed that the problem was probably overtraining of the model to apply too much breaking in some situations. Nevertheless, the car could take every type of curves (even U-turns) almost perfectly with high speeds. It seems that the model had a problem to revert to old states and correct this behaviour. In consecutive experiments I tried reducing the discrete action space, which helped and solved the game in 3 hours less than achieving score of 896 in previous best model.
+The process shows it took over **11 hours** to generate **mean evaluation reward of 921 points** - the game winning model. Previous experiments with DQN proved that the problem had been probably overtraining and as a result the agent applied too much breaking in some situations. Nevertheless, the car could take every type of curves (even U-turns) almost perfectly with high speeds. It seems that the model had a problem to revert to old states and correct this behaviour. In consecutive experiments I tried reducing the discrete action space, which helped and solved the game in 3 hours less than achieving score of 896 in the case of previous best model.
 The training process of DQN networks takes a long time - multiple hours - and usually it's only visible at later stages what's going wrong, which is very time consuming. 
 
 PPO results with on-policy learning seem to be worse than DQN so far. The learning takes quicker, especially the start of it. Probably it's harder to teach policy from consecutive frames all the time comparing to off-policy learning with replay buffer in the case of DQN. 
 PPO allows to run a few experiments in parallel but I've had some problems with launching it with stable-baselines library. 
 
 ## Summary
-There are many configuration options possible to both achieve better training efficiency and accuracy. It seems to be 11 hours is still too long for such model to train. 
+There are many configuration options possible in order to both achieve better training efficiency and accuracy. It seems to me that 11 hours is still too long for such a model to train. 
 
-The first option could be:
-* further simplify the environment by applying some image processing features - segmentation of the road,
+Some of the option might be:
+* further simplify the environment by applying some image processing features - e.g. segmentation of the road,
 * more advanced environment processing - like applying deep autoencoders, 
 * apply some other discretization methods for DQN,
 * experimenting with CNN training arguments (using the pre-implemented stable-baselines method limits the configuration options, some are also unclear - like setting up epsilon) 
