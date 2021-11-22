@@ -51,7 +51,8 @@ OpenAI Gym Car racing environment features both continous observation world form
 **The saved models** are stored in [Models folder link](Training/Saved_Models) folder. 
 **The output videos from 10 episodes of last run tests of best model (in this case DQN)** are saved in [Video link](monitor/) folder.
 
-The best video has achieved score of 925:
+The best model has achieved score of 925:
+
 ![Best video](best_video.gif)
 
 The experiments including various types of observation and action spaces were performed on RTX 3070 graphics card (CUDA) using conda environment. They were both high memory and GPU processing time demanding. The test have been performed on both PPO and DQN. PPO used mostly standard continuous observation spaces with environment wrappers while experiments performed with DQN algorithms used various modifications: 
