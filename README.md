@@ -51,24 +51,25 @@ OpenAI Gym Car racing environment features both continous observation world form
 **The saved models** are stored in [Models folder link](Training/Saved_Models) folder. 
 **The output videos from 10 episodes of last run tests of best model (in this case DQN)** are saved in [Video link](monitor/) folder.
 
-The best video has achieved score of 896:
+The best video has achieved score of 925:
 ![Best video](best_video.gif)
 
 The experiments including various types of observation and action spaces were performed on RTX 3070 graphics card (CUDA) using conda environment. They were both high memory and GPU processing time demanding. The test have been performed on both PPO and DQN. PPO used mostly standard continuous observation spaces with environment wrappers while experiments performed with DQN algorithms used various modifications: 
 * slight changes of CNN architecture, 
 * various replay buffer sizes, 
 * different discrete action spaces, etc. 
-**The best results** have been achieved by using **DQN network** with **8 stacked consecutive 84x84 grayscale pixels frames** with **discrete action space of 11 actions**. The following tensorboard snapshot captured the training process:
+**The best results** have been achieved by using **DQN network** with **4 stacked consecutive 84x84 grayscale pixels frames** with **discrete action space of 5 actions**. The following tensorboard snapshot captured the training process:
 
-![Tensorboard Snapshot 1](tb_DQN.jpg)
+![Tensorboard Snapshot 1](tb_dqn_ppo.jpg)
 
-The process shows that it took over **14 hours** to generate **mean evaluation reward of 894 points** which only misses 6 points to complete the game. The experiments show that the problem was probably overtraining of the model to apply too much breaking in some situations. Nevertheless, the car could take every type of curves (even U-turns) almost perfectly with high speeds. It seems that the model had a problem to revert to old states and correct this behaviour. In consecutive experiments I tried reducing the discrete action space by deleting possibility of braking harder or stopping. This would enforce the agent to learn to drive quickly like a pro driver. The experiment is in progress.
+The process shows that it took over **11 hours** to generate **mean evaluation reward of 921 points** - the game winning model. Previous experiments with DQN showed that the problem was probably overtraining of the model to apply too much breaking in some situations. Nevertheless, the car could take every type of curves (even U-turns) almost perfectly with high speeds. It seems that the model had a problem to revert to old states and correct this behaviour. In consecutive experiments I tried reducing the discrete action space, which helped and solved the game in 3 hours less than achieving score of 896 in previous best model.
 The training process of DQN networks takes a long time - multiple hours - and usually it's only visible at later stages what's going wrong, which is very time consuming. 
 
-PPO description ... TO BE DONE (still training, the results seem to be much worse than DQN so far, so I'm trying to get better model and make sure nothing is wrong with the environment setup)
+PPO results with on-policy learning seem to be worse than DQN so far. The learning takes quicker, especially the start of it. Probably it's harder to teach policy from consecutive frames all the time comparing to off-policy learning with replay buffer in the case of DQN. 
+PPO allows to run a few experiments in parallel but I've had some problems with launching it with stable-baselines library. 
 
 ## Summary
-There are many configuration options possible to both achieve better training efficiency and accuracy. It seems to be 14 hours is still too long for such model to train. 
+There are many configuration options possible to both achieve better training efficiency and accuracy. It seems to be 11 hours is still too long for such model to train. 
 
 The first option could be:
 * further simplify the environment by applying some image processing features - segmentation of the road,
