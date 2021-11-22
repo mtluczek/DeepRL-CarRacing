@@ -3,22 +3,24 @@ import os
 from stable_baselines3 import DQN, PPO
 from stable_baselines3.common.evaluation import evaluate_policy
 from stable_baselines3.common.callbacks import EvalCallback
+from stable_baselines3.common.env_util import make_vec_env
 import argparse
-from src.env_wrappers import EnvironmentWrappers, DiscreteCarEnvironment
+from src.env_wrappers import EnvironmentWrappers, DiscreteCarEnvironment, RewardWrapper
 
 WIDTH = 84
 HEIGHT = 84
-STACKED_FRAMES = 8
-REPLAY_BUFFER_SIZE = 10000
+STACKED_FRAMES = 4
+REPLAY_BUFFER_SIZE = 50000
 BATCH_SIZE = 64
 TIME_STEPS = 5000000
 NUM_EPISODES = 10
+LEARNING_STARTS = 5000
 
 
 def train_model(model_name, buf_size, batch_size, log_path, model_path, num_steps):
     if model_name == "DQN":
         model = DQN('CnnPolicy', env, verbose=1, device='cuda', buffer_size=REPLAY_BUFFER_SIZE, batch_size=BATCH_SIZE,
-                    tensorboard_log=log_path)
+                    tensorboard_log=log_path, learning_starts=LEARNING_STARTS)
     else:
         if model_name == "PPO":
             model = PPO('CnnPolicy', env, verbose=1, device='cuda', tensorboard_log=log_path)
@@ -26,7 +28,7 @@ def train_model(model_name, buf_size, batch_size, log_path, model_path, num_step
             return -1
 
     save_best_path = os.path.join(model_path, model_name, 'best_model')
-    save_final_path = os.path.join(model_path, model_name, 'final_model')
+    save_final_path = os.path.join(model_path, model_name, 'final_model', 'final_model.zip')
 
     print(save_final_path)
     print(save_best_path)
@@ -42,8 +44,9 @@ def train_model(model_name, buf_size, batch_size, log_path, model_path, num_step
 
 
 def resume_train_model(model_name, log_path, model_path, environment, num_steps):
-    path = os.path.join(model_path, model_name, "best_model")
-    save_final_path = os.path.join(model_path, model_name, "final_model")
+    path = os.path.join(model_path, model_name, "best_model.zip")
+    save_best_path = os.path.join(model_path, model_name, "best_model")
+    save_final_path = os.path.join(model_path, model_name, "final_model", "final_model.zip")
     print(f"Logging to Tensorboard: {log_path}")
     print(f"Saving models to: {model_path}")
 
@@ -58,7 +61,7 @@ def resume_train_model(model_name, log_path, model_path, environment, num_steps)
             return -1
 
     model.set_env(environment)
-    eval_callback = EvalCallback(eval_env=model.get_env(), best_model_save_path=path,
+    eval_callback = EvalCallback(eval_env=model.get_env(), best_model_save_path=save_best_path,
                                  n_eval_episodes=5,
                                  eval_freq=50000, verbose=1,
                                  deterministic=True, render=False)
@@ -114,14 +117,12 @@ if __name__ == '__main__':
 
     env_wrappers = EnvironmentWrappers(WIDTH, HEIGHT, STACKED_FRAMES)
 
-    if args.agent == "PPO":
-        env = gym.make("CarRacing-v0")
-    else:  # else -> DQN model
-        env = DiscreteCarEnvironment(gym.make("CarRacing-v0"))
-        funcs = [env_wrappers.resize, env_wrappers.grayscale, env_wrappers.frame_stack]
-        env = env_wrappers.observation_wrapper(env, funcs)
-        # apply 3 transformation wrappers to DQN model (resize, grayscale, stacking frames)
+    env = DiscreteCarEnvironment(gym.make("CarRacing-v0"))
+    funcs = [env_wrappers.resize, env_wrappers.grayscale, env_wrappers.frame_stack]
+    env = env_wrappers.observation_wrapper(env, funcs)
+    # env = RewardWrapper(env)
 
+    # apply 3 transformation wrappers to DQN model (resize, grayscale, stacking frames)
 
     print(f"Observation space shape: {env.observation_space.shape}")
 
